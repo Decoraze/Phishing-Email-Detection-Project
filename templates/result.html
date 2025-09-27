@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %}Email Analysis Results{% endblock %}
+{% block header %}Email Security Analysis Results{% endblock %}
+{% block subtitle %}Comprehensive threat assessment and risk evaluation{% endblock %}
+
+{% block content %}
+<!-- Main Risk Analysis Results Section -->
+<div class="analysis-results">
+    <h3>Security Analysis Results</h3>
+    
+    <!-- Risk Analysis Cards Display -->
+    <div class="risk-cards">
+        <!-- Risk Level Card with Color Coding -->
+        <div class="info-card risk-level-card">
+            <div class="info-label">Risk Level</div>
+            <div class="info-value risk-display" 
+                 data-risk="{{ risk_analysis.get('risk_level', 'Unknown') }}">
+                {% if risk_analysis and risk_analysis.get('risk_level') %}
+                    {{ risk_analysis.get('risk_level') }}
+                {% else %}
+                    Unknown
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Risk Score Card -->
+        <div class="info-card">
+            <div class="info-label">Risk Score</div>
+            <div class="info-value">
+                {% if risk_analysis and risk_analysis.get('risk_score') is not none %}
+                    {{ risk_analysis.get('risk_score') }}/100
+                {% else %}
+                    --/100
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Keywords Found Card -->
+        <div class="info-card">
+            <div class="info-label">Suspicious Keywords</div>
+            <div class="info-value">
+                {% if risk_analysis and risk_analysis.get('sus_keywords') is not none %}
+                    {{ risk_analysis.get('sus_keywords') }} found
+                {% else %}
+                    -- found
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Statistics -->
+<div class="processing-stats">
+    <h3>Processing Information</h3>
+    <div class="stats-grid">
+        <div class="stat-item">
+            <strong>Processing Time:</strong> {{ processing_time }}
+        </div>
+        <div class="stat-item">
+            <strong>Input Size:</strong> {{ input_length }}
+        </div>
+        <div class="stat-item">
+            <strong>Output Size:</strong> {{ output_length }}
+        </div>
+        <div class="stat-item">
+            <strong>Throughput:</strong> {{ throughput }}
+        </div>
+    </div>
+</div>
+
+<!-- Original Email Text Section -->
+<div class="result-section">
+    <h3>Original Email Sample</h3>
+    <div class="text-display">
+        <div class="text-header">
+            <span class="text-label">Input Preview (first 500 characters)</span>
+            <button type="button" onclick="copyToClipboard('{{ original_text|replace('\n', '\\n')|replace('\'', '\\\'')|replace('\"', '\\\"') }}')" 
+                    class="copy-btn" title="Copy original text">📋 Copy</button>
+        </div>
+        <pre class="email-text original-text">{{ original_text }}</pre>
+    </div>
+</div>
+
+<!-- Cleaned Text Results Section -->
+<div class="result-section">
+    <h3>Cleaned Text Output</h3>
+    <div class="text-display">
+        <div class="text-header">
+            <span class="text-label">Processed and Structured Email Content</span>
+            <button type="button" onclick="copyToClipboard('{{ result|replace('\n', '\\n')|replace('\'', '\\\'')|replace('\"', '\\\"') }}')" 
+                    class="copy-btn" title="Copy processed text">📋 Copy</button>
+        </div>
+        <pre class="email-text processed-text">{{ result }}</pre>
+    </div>
+</div>
+
+<!-- Security Recommendations Section -->
+{% if risk_analysis %}
+<div class="security-recommendations">
+    <h3>Security Assessment</h3>
+    <div class="recommendation-card">
+        {% set risk_level = risk_analysis.get('risk_level', '').upper() %}
+        {% set risk_score = risk_analysis.get('risk_score', 0) %}
+        
+        {% if risk_level == 'SAFE' %}
+            <div class="recommendation safe">
+                <h4>✅ Email appears legitimate</h4>
+                <p>This email shows no significant signs of phishing or malicious content. However, always remain vigilant and verify sender authenticity for sensitive requests.</p>
+            </div>
+        {% elif risk_level == 'LOW DANGER' %}
+            <div class="recommendation low">
+                <h4>⚠️ Minor security concerns detected</h4>
+                <p>This email contains some elements that warrant caution. Verify the sender's identity before taking any requested actions, especially those involving sensitive information.</p>
+            </div>
+        {% elif risk_level == 'MEDIUM DANGER' %}
+            <div class="recommendation medium">
+                <h4>🟠 Suspicious elements present</h4>
+                <p>This email exhibits multiple characteristics common in phishing attempts. Exercise extreme caution, verify through independent channels, and avoid clicking links or downloading attachments.</p>
+            </div>
+        {% elif risk_level == 'HIGH DANGER' %}
+            <div class="recommendation high">
+                <h4>🚨 High risk of phishing</h4>
+                <p>This email shows strong indicators of a phishing or social engineering attack. Do not click any links, download attachments, or provide any information. Report this email to your IT security team.</p>
+            </div>
+        {% else %}
+            <div class="recommendation unknown">
+                <h4>❓ Analysis incomplete</h4>
+                <p>Unable to complete full security analysis. When in doubt, treat emails with caution and verify sender authenticity through independent means.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="action-buttons">
+    <a href="/" class="action-btn primary">Analyze Another Email</a>
+    <a href="/stats" class="action-btn secondary">View Statistics</a>
+</div>
+
+<!-- CSS Styles for Results Page -->
+<style>
+.analysis-results {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 25px;
+    border: 1px solid #dee2e6;
+}
+
+.risk-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.info-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.info-label {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.info-value {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #495057;
+}
+
+/* Risk Level Color Coding */
+.risk-display[data-risk="SAFE"] {
+    color: #28a745;
+    background: #d4edda;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 2px solid #28a745;
+}
+
+.risk-display[data-risk="LOW DANGER"] {
+    color: #ffc107;
+    background: #fff3cd;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 2px solid #ffc107;
+}
+
+.risk-display[data-risk="MEDIUM DANGER"] {
+    color: #fd7e14;
+    background: #ffe8d6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 2px solid #fd7e14;
+}
+
+.risk-display[data-risk="HIGH DANGER"] {
+    color: #dc3545;
+    background: #f8d7da;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 2px solid #dc3545;
+}
+
+.processing-stats {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.stat-item {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.95em;
+}
+
+.result-section {
+    margin-bottom: 30px;
+}
+
+.result-section h3 {
+    color: #495057;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.text-display {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+}
+
+.text-header {
+    background: #f8f9fa;
+    padding: 12px 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px 8px 0 0;
+}
+
+.text-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95em;
+}
+
+.copy-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.2s;
+}
+
+.copy-btn:hover {
+    background: #0056b3;
+}
+
+.email-text {
+    padding: 20px;
+    margin: 0;
+    background: white;
+    border: none;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+    color: #495057;
+}
+
+.original-text {
+    border-radius: 0 0 8px 8px;
+    background: #f8f9fa;
+}
+
+.processed-text {
+    border-radius: 0 0 8px 8px;
+}
+
+.security-recommendations {
+    margin: 30px 0;
+}
+
+.recommendation-card {
+    margin-top: 15px;
+}
+
+.recommendation {
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 5px solid;
+}
+
+.recommendation.safe {
+    background: #d4edda;
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.recommendation.low {
+    background: #fff3cd;
+    border-left-color: #ffc107;
+    color: #856404;
+}
+
+.recommendation.medium {
+    background: #ffe8d6;
+    border-left-color: #fd7e14;
+    color: #8a4000;
+}
+
+.recommendation.high {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.recommendation.unknown {
+    background: #e2e3e5;
+    border-left-color: #6c757d;
+    color: #383d41;
+}
+
+.recommendation h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+}
+
+.recommendation p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s;
+    border: 2px solid;
+}
+
+.action-btn.primary {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.action-btn.primary:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+    color: white;
+}
+
+.action-btn.secondary {
+    background: white;
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.action-btn.secondary:hover {
+    background: #6c757d;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .risk-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .text-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}

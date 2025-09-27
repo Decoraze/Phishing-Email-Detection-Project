@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Email Processor{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container fade-in">
+        <div class="header">
+            <h1>{% block header %}Email Processor{% endblock %}</h1>
+            <p>{% block subtitle %}Process email text for security analysis{% endblock %}</p>
+        </div>
+        
+        <div class="content">
+            <!-- Flash messages (success/error notifications) -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- This is where each page puts its unique content -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script>
+        // JavaScript functions for the user interface
+        
+        function validateForm() {
+            // Check if user entered text before submitting
+            const textInput = document.getElementById('text_input');
+            
+            if (!textInput || !textInput.value.trim()) {
+                alert('Please enter some email text to process.');
+                return false;
+            }
+            
+            const textLength = textInput.value.length;
+            if (textLength > 1000000) { // 1MB limit
+                alert('Text is too long. Maximum size is 1MB.');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.querySelector('.submit-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Processing...';
+                submitBtn.classList.add('loading');
+            }
+            
+            return true;
+        }
+
+        // Auto-resize textarea as user types
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.getElementById('text_input');
+            if (textarea) {
+                let resizeTimeout;
+                textarea.addEventListener('input', function() {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        this.style.height = 'auto';
+                        this.style.height = Math.min(this.scrollHeight, 400) + 'px';
+                        updateCharacterCount(this.value.length);
+                    }, 100);
+                });
+                
+                updateCharacterCount(textarea.value.length);
+            }
+        });
+
+        function updateCharacterCount(count) {
+            // Show character count with color coding
+            const counter = document.getElementById('char-counter');
+            if (counter) {
+                counter.textContent = `${count.toLocaleString()} characters`;
+                
+                if (count > 800000) { // 80% of 1MB limit
+                    counter.style.color = '#dc3545'; // Red
+                } else if (count > 500000) { // 50% of 1MB limit
+                    counter.style.color = '#ffc107'; // Yellow
+                } else {
+                    counter.style.color = '#28a745'; // Green
+                }
+            }
+        }
+
+        // Copy text to clipboard
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showNotification('Copied to clipboard!');
+                }).catch(function() {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            // Fallback method for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showNotification('Copied to clipboard!');
+            } catch (err) {
+                showNotification('Copy failed. Please select and copy manually.');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showNotification(message) {
+            // Show temporary notification
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success notification';
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1000';
+            notification.style.minWidth = '200px';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 2000);
+        }
+
+        // Load sample email for testing
+        function loadSampleEmail() {
+            const textarea = document.getElementById('text_input');
+            if (textarea) {
+                const sample = `Subject: Urgent Account Verification Required
+From: Security Team <security@suspicious-bank.com>
+To: victim@company.com
+Date: Mon, 15 Jan 2024 03:47:22
+Message-ID: <campaign123@phishing-server.com>
+Reply-To: collect-responses@different-domain.com
+
+URGENT: Your account shows suspicious activity!
+
+Dear Valued Customer,
+
+We have detected unusual activity on your account that requires immediate verification. Your account will be suspended in 24 hours unless you take action now.
+
+Click here to verify your account immediately:
+http://verify-account-security.malicious-site.com
+
+If you do not verify within 24 hours, your account will be permanently suspended and you will lose access to all your funds.
+
+This is an automated security message. Do not reply to this email.
+
+Security Department
+Global Bank Security Team`;
+                
+                textarea.value = sample;
+                updateCharacterCount(sample.length);
+                
+                // Trigger auto-resize
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 400) + 'px';
+            }
+        }
+    </script>
+</body>
+</html>

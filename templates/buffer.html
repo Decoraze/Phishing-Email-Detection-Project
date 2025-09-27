@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Processing - Please Wait{% endblock %}
+{% block header %}Analyzing Email Security{% endblock %}
+{% block subtitle %}Please wait while we analyze your email...{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px;">
+    
+    <!-- Loading Animation -->
+    <div id="loading-spinner" style="margin-bottom: 30px;">
+        <div style="width: 60px; height: 60px; border: 6px solid #e9ecef; border-top: 6px solid #4facfe; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+    </div>
+    
+    <!-- Status Message -->
+    <div id="status-message">
+        <h3 style="color: #495057; margin-bottom: 15px;">Processing Your Email</h3>
+        <p style="color: #6c757d; font-size: 1.1em; margin-bottom: 20px;" id="status-text">
+            Running machine learning analysis and security checks...
+        </p>
+    </div>
+    
+    <!-- Progress Steps -->
+    <div style="max-width: 400px; margin: 30px auto;">
+        <div id="step-1" style="padding: 10px; background: #e3f2fd; border-radius: 5px; margin-bottom: 10px;">
+            ✓ Text Processing Complete
+        </div>
+        <div id="step-2" style="padding: 10px; background: #fff3e0; border-radius: 5px; margin-bottom: 10px;">
+            🔄 Running Security Analysis...
+        </div>
+        <div id="step-3" style="padding: 10px; background: #f3e5f5; border-radius: 5px; margin-bottom: 10px;">
+            ⏳ Machine Learning Classification
+        </div>
+        <div id="step-4" style="padding: 10px; background: #e8f5e8; border-radius: 5px; margin-bottom: 10px;">
+            ⏳ Generating Results
+        </div>
+    </div>
+    
+    <!-- Error Message (hidden by default) -->
+    <div id="error-message" style="display: none; background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; margin-top: 20px;">
+        <h4>Processing Error</h4>
+        <p>There was an error processing your email. Please try again.</p>
+        <a href="/" style="color: #721c24; font-weight: bold;">Return to Home</a>
+    </div>
+
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.step-complete {
+    background: #d4edda !important;
+    color: #155724;
+}
+
+.step-processing {
+    background: #fff3cd !important;
+    color: #856404;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+</style>
+
+<script>
+let checkCount = 0;
+let maxChecks = 30; // 1 minute maximum (2 seconds per check)
+
+function updateStep(stepNumber) {
+    // Update visual progress
+    for (let i = 1; i <= stepNumber; i++) {
+        const step = document.getElementById(`step-${i}`);
+        if (step) {
+            if (i === stepNumber) {
+                step.className = 'step-processing';
+                step.innerHTML = step.innerHTML.replace('⏳', '🔄').replace('✓', '🔄');
+            } else if (i < stepNumber) {
+                step.className = 'step-complete';
+                step.innerHTML = step.innerHTML.replace('🔄', '✓').replace('⏳', '✓');
+            }
+        }
+    }
+}
+
+function checkStatus() {
+    checkCount++;
+    
+    fetch('/check_status')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Status check:', data);
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            if (data.status === 'completed' && data.redirect) {
+                // Update all steps to complete
+                updateStep(4);
+                document.getElementById('status-text').textContent = 'Analysis complete! Redirecting...';
+                
+                // Redirect to results
+                setTimeout(() => {
+                    window.location.href = '/result';
+                }, 1500);
+                return;
+            }
+            
+            // Update progress based on status
+            if (checkCount <= 5) {
+                updateStep(2);
+                document.getElementById('status-text').textContent = 'Running security analysis...';
+            } else if (checkCount <= 15) {
+                updateStep(3);
+                document.getElementById('status-text').textContent = 'Processing with machine learning...';
+            } else {
+                updateStep(4);
+                document.getElementById('status-text').textContent = 'Finalizing results...';
+            }
+            
+            // Continue checking if not complete
+            if (checkCount < maxChecks) {
+                setTimeout(checkStatus, 2000); // Check every 2 seconds
+            } else {
+                showError('Processing is taking longer than expected. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Status check failed:', error);
+            showError('Connection error. Please check your internet connection.');
+        });
+}
+
+function showError(message) {
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('status-message').style.display = 'none';
+    const errorDiv = document.getElementById('error-message');
+    errorDiv.style.display = 'block';
+    errorDiv.querySelector('p').textContent = message;
+}
+
+// Start checking status when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateStep(1); // Show first step complete
+    setTimeout(checkStatus, 2000); // Start checking after 2 seconds
+});
+</script>
+
+{% endblock %}

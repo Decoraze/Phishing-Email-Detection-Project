@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found{% endblock %}
+{% block header %}404 - Page Not Found{% endblock %}
+{% block subtitle %}The page you're looking for doesn't exist{% endblock %}
+
+{% block content %}
+<!-- User-friendly error state container with helpful guidance -->
+<div class="empty-state">
+    <h3>Page Not Found</h3>
+    <p>The page you're looking for doesn't exist or has been moved.</p>
+    <p>Here are some things you can try:</p>
+    
+    <!-- List of suggested actions for error recovery -->
+    <ul>
+        <!-- Primary action: return to main functionality -->
+        <li>Go back to the <a href="/">main page</a> to process email text</li>
+        <!-- User troubleshooting suggestion -->
+        <li>Check the URL for typos</li>
+        <!-- Alternative functionality access -->
+        <li>View <a href="/stats">performance statistics</a></li>
+    </ul>
+</div>
+
+<!-- Navigation section for quick access to main features -->
+<div class="navigation">
+    <a href="/" class="nav-link">Go Home</a>
+</div>
+{% endblock %}
