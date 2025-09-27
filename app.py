@@ -473,18 +473,12 @@ if __name__ == '__main__':
         print(f"Processor available: {'✓ Yes' if PROCESSOR_AVAILABLE else '✗ No'}")
         print("Web Interface: http://localhost:5000")
         print("Performance Stats: http://localhost:5000/stats")
-        print()
-        print("NEW FLOW:")
-        print("  1. User submits form → creates session → redirects to buffer")
-        print("  2. Buffer page polls status every second")
-        print("  3. main.py processes ML → updates session via API")
-        print("  4. Buffer redirects to results when complete")
         print("=" * 60)
         
         app.run(debug=True, host='0.0.0.0', port=5000)
         
     except KeyboardInterrupt:
-        print("\nShutting down gracefully...")
+        print("\nShutting down...")
     except Exception as e:
         print(f"Failed to start Flask application: {e}")
     finally:
